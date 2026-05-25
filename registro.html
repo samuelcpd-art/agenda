@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Conta - Agenda</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #e9ecef; margin: 0; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 350px; }
+        h2 { text-align: center; color: #2d3436; margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #dfe6e9; border-radius: 6px; box-sizing: border-box; outline: none; }
+        input:focus { border-color: #00b894; }
+        button { width: 100%; padding: 12px; background: #00b894; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; margin-bottom: 10px; }
+        button:hover { background: #00947a; }
+        .link { text-align: center; display: block; color: #0984e3; cursor: pointer; font-size: 14px; text-decoration: none; }
+        .link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Criar Nova Conta</h2>
+    <input type="text" id="nome" placeholder="Seu Nome Completo" required>
+    <input type="email" id="email" placeholder="Seu E-mail" required>
+    <input type="password" id="senha" placeholder="Crie uma Senha" required>
+    <button onclick="registrar()">Finalizar Cadastro</button>
+    <a href="login.html" class="link">Já tem uma conta? Faça Login</a>
+</div>
+
+<script>
+    async function registrar() {
+        const nome = document.getElementById('nome').value;
+        const email = document.getElementById('email').value;
+        const senha = document.getElementById('senha').value;
+
+        if(!nome || !email || !senha) {
+            alert("Preencha todos os campos!");
+            return;
+        }
+
+        const res = await fetch('auth.php', {
+            method: 'POST',
+            body: JSON.stringify({ acao: 'registrar', nome, email, senha })
+        });
+        const dados = await res.json();
+        
+        if (dados.sucesso) {
+            alert("Conta criada com sucesso! Você já pode fazer login.");
+            window.location.href = 'login.html'; // Manda pro login
+        } else {
+            alert(dados.msg);
+        }
+    }
+</script>
+
+</body>
+</html>

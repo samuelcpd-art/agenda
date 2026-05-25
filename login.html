@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Agenda</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #e9ecef; margin: 0; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 350px; }
+        h2 { text-align: center; color: #2d3436; margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #dfe6e9; border-radius: 6px; box-sizing: border-box; outline: none; }
+        input:focus { border-color: #0984e3; }
+        button { width: 100%; padding: 12px; background: #0984e3; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; margin-bottom: 10px; }
+        button:hover { background: #076ebf; }
+        .link { text-align: center; display: block; color: #00b894; cursor: pointer; font-size: 14px; text-decoration: none; }
+        .link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Acessar Agenda</h2>
+    <input type="email" id="email" placeholder="Seu E-mail" required>
+    <input type="password" id="senha" placeholder="Sua Senha" required>
+    <button onclick="login()">Entrar</button>
+    <a href="registro.html" class="link">Ainda não tem conta? Registre-se</a>
+</div>
+
+<script>
+    async function login() {
+        const email = document.getElementById('email').value;
+        const senha = document.getElementById('senha').value;
+
+        if(!email || !senha) {
+            alert("Preencha e-mail e senha!");
+            return;
+        }
+
+        const res = await fetch('auth.php', {
+            method: 'POST',
+            body: JSON.stringify({ acao: 'login', email, senha })
+        });
+        const dados = await res.json();
+
+        if (dados.sucesso) {
+            window.location.href = 'index.html'; // Logou com sucesso, vai pra agenda
+        } else {
+            alert(dados.msg); // Mostra "senha incorreta", etc
+        }
+    }
+</script>
+
+</body>
+</html>

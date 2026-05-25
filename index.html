@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Agenda Inteligente</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; padding: 40px 20px; background: #e9ecef; margin: 0; }
+        .container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #f1f2f6; padding-bottom: 10px; }
+        .header h2 { margin: 0; color: #2d3436; }
+        .btn-sair { background: #dfe6e9; color: #2d3436; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .btn-sair:hover { background: #b2bec3; }
+
+        .form-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        input { flex: 1; padding: 12px; border: 1px solid #dfe6e9; border-radius: 6px; outline: none; }
+        input:focus { border-color: #0984e3; }
+        
+        button.btn-add { padding: 12px 20px; background: #00b894; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; white-space: nowrap; }
+        button.btn-add:hover { background: #00947a; }
+
+        ul { list-style: none; padding: 0; margin: 0; }
+        li { background: #fdfdfd; margin-bottom: 10px; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #0984e3; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.2s; }
+        li:hover { transform: translateX(5px); }
+        
+        .concluida { border-left-color: #00b894; background: #f1f8f6; }
+        .concluida .info-tarefa strong { text-decoration: line-through; color: #636e72; }
+
+        .info-tarefa { cursor: pointer; flex-grow: 1; display: flex; flex-direction: column; gap: 4px; }
+        .info-tarefa strong { font-size: 16px; color: #2d3436; transition: 0.3s; }
+        .info-tarefa small { color: #b2bec3; font-size: 13px; font-weight: 500; }
+
+        .btn-remover { background: #fab1a0; color: #d63031; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-remover:hover { background: #ff7675; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>Minha Agenda</h2>
+        <button class="btn-sair" onclick="sair()">Sair</button>
+    </div>
+
+    <div class="form-group">
+        <input type="text" id="titulo" placeholder="O que você vai fazer?">
+        <input type="datetime-local" id="data">
+        <button class="btn-add" onclick="adicionarTarefa()">Agendar</button>
+    </div>
+
+    <ul id="lista"></ul>
+</div>
+
+<script>
+    // Carrega as tarefas do banco de dados ao iniciar
+    window.onload = carregarTarefas;
+
+    async function carregarTarefas() {
+        const resposta = await fetch('api.php');
+        const tarefas = await resposta.json();
+        
+        // Se retornar erro, significa que a sessão expirou ou não logou
+        if (tarefas.erro) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        const lista = document.getElementById('lista');
+        lista.innerHTML = '';
+        
+        tarefas.forEach(tarefa => {
+            const dataFormatada = new Date(tarefa.data_tarefa).toLocaleString('pt-BR', {
+                day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+            
+            const li = document.createElement('li');
+            const ehConcluida = parseInt(tarefa.concluida) ? 'concluida' : '';
+            if(ehConcluida) li.classList.add('concluida');
+
+            li.innerHTML = `
+                <div class="info-tarefa" onclick="alternarConcluida(${tarefa.id})">
+                    <strong>${tarefa.titulo}</strong>
+                    <small>📅 ${dataFormatada}</small>
+                </div>
+                <button class="btn-remover" onclick="removerTarefa(${tarefa.id})">Excluir</button>
+            `;
+            lista.appendChild(li);
+        });
+    }
+
+    async function adicionarTarefa() {
+        const titulo = document.getElementById('titulo').value;
+        const data = document.getElementById('data').value;
+
+        if (!titulo || !data) {
+            alert("Por favor, preencha a tarefa e a data.");
+            return;
+        }
+
+        await fetch('api.php', {
+            method: 'POST',
+            body: JSON.stringify({ titulo, data })
+        });
+
+        document.getElementById('titulo').value = '';
+        document.getElementById('data').value = '';
+        carregarTarefas(); // Atualiza a tela puxando do banco
+    }
+
+    async function alternarConcluida(id) {
+        await fetch('api.php', {
+            method: 'PUT',
+            body: JSON.stringify({ id })
+        });
+        carregarTarefas();
+    }
+
+    async function removerTarefa(id) {
+        if(confirm("Tem certeza que deseja apagar esta tarefa?")) {
+            await fetch('api.php', {
+                method: 'DELETE',
+                body: JSON.stringify({ id })
+            });
+            carregarTarefas();
+        }
+    }
+
+    async function sair() {
+        await fetch('auth.php', {
+            method: 'POST',
+            body: JSON.stringify({ acao: 'logout' })
+        });
+        window.location.href = 'login.html';
+    }
+</script>
+
+</body>
+</html>
